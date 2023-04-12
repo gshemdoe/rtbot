@@ -86,6 +86,17 @@ bot.start(async ctx => {
     }
 })
 
+bot.command('admin', async ctx => {
+    try {
+        if (ctx.chat.id == imp.halot || ctx.chat.id == imp.shemdoe) {
+            await ctx.reply(`/stats - stats\n/verification - post to xbongo vmessage`)
+        }
+
+    } catch (err) {
+        console.log(err.message)
+    }
+})
+
 bot.command('stats', async ctx => {
     try {
         let idadi = await rtStarterModel.countDocuments()
@@ -141,6 +152,26 @@ bot.command('/convo', async ctx => {
         }
     }
 
+})
+
+bot.command('verification', async ctx => {
+    try {
+        if (ctx.chat.id == imp.halot || ctx.chat.id == imp.shemdoe) {
+            await bot.telegram.copyMessage(imp.xbongo, imp.pzone, 7757, {
+                inline_keyboard: [
+                    [
+                        { text: 'Watoa huduma, Omba kuwa verified', url: 'http://t.me/blackberry255' }
+                    ],
+                    [
+                        { text: 'Hapa! List ya watoa huduma waaminifu', url: 'https://t.me/rahatupu_tzbot?start=verified_list' }
+                    ]
+                ]
+            })
+        }
+
+    } catch (err) {
+        console.log(err.message)
+    }
 })
 
 bot.on('text', async ctx => {
