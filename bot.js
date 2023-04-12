@@ -161,7 +161,7 @@ bot.command('verification', async ctx => {
                 reply_markup: {
                     inline_keyboard: [
                         [
-                            { text: 'Watoa huduma, Omba kuwa verified', url: 'http://t.me/blackberry255' }
+                            { text: 'Watoa huduma, Omba kuwa Verified ✅', url: 'http://t.me/blackberry255' }
                         ],
                         [
                             { text: 'Hapa! List ya watoa huduma waaminifu', url: 'https://t.me/rahatupu_tzbot?start=verified_list' }
