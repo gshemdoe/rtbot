@@ -158,14 +158,16 @@ bot.command('verification', async ctx => {
     try {
         if (ctx.chat.id == imp.halot || ctx.chat.id == imp.shemdoe) {
             await bot.telegram.copyMessage(imp.xbongo, imp.pzone, 7757, {
-                inline_keyboard: [
-                    [
-                        { text: 'Watoa huduma, Omba kuwa verified', url: 'http://t.me/blackberry255' }
-                    ],
-                    [
-                        { text: 'Hapa! List ya watoa huduma waaminifu', url: 'https://t.me/rahatupu_tzbot?start=verified_list' }
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            { text: 'Watoa huduma, Omba kuwa verified', url: 'http://t.me/blackberry255' }
+                        ],
+                        [
+                            { text: 'Hapa! List ya watoa huduma waaminifu', url: 'https://t.me/rahatupu_tzbot?start=verified_list' }
+                        ]
                     ]
-                ]
+                }
             })
         }
 
