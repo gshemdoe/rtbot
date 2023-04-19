@@ -1,7 +1,9 @@
 const { Telegraf } = require('telegraf')
 require('dotenv').config()
-const rtStarterModel = require('./database/chats')
 const mongoose = require('mongoose')
+const rtStarterModel = require('./database/chats')
+const malayaModel = require('./database/malaya')
+const videosDB = require('./database/db')
 
 
 const bot = new Telegraf(process.env.BOT_TOKEN)
@@ -32,6 +34,7 @@ const imp = {
     mikekaDB: -1001696592315,
     logsBin: -1001845473074,
     mylove: -1001748858805,
+    malayaDB: -1001783364680,
     rtgrp: -1001899312985
 }
 
@@ -68,6 +71,24 @@ bot.start(async ctx => {
 
         if (ctx.startPayload) {
             let pload = ctx.startPayload
+            let userid = ctx.chat.id
+            if(pload.includes('RTBOT-')) {
+                let nano = pload.split('RTBOT-')[1]
+                let vid = await videosDB.findOne({nano})
+                let txt = `Unakaribia kudownload <b>${vid.caption}</b>\n\n<i>fungua button hapo chini kwa takribani sekunde 10 kupata video hii</b>`
+                let url = `http://get-ohmy-full-video.font5.net/rahaatuupu/${userid}/AgADzw4AAib1cFE3268`
+
+                await ctx.reply(txt, {
+                    parse_mode: 'HTML',
+                    reply_markup: {
+                        inline_keyboard: [
+                            [
+                                {text: "▶ DOWNLOAD FULL VIDEO NOW", url}
+                            ]
+                        ]
+                    }
+                })
+            }
             if (pload.toLowerCase() == 'verified_list') {
                 await bot.telegram.copyMessage(ctx.chat.id, imp.pzone, 7755, {
                     reply_markup: {
@@ -154,23 +175,50 @@ bot.command('/convo', async ctx => {
 
 })
 
-bot.command('verification', async ctx => {
+bot.on('channel_post', async ctx=> {
     try {
-        if (ctx.chat.id == imp.halot || ctx.chat.id == imp.shemdoe) {
-            await bot.telegram.copyMessage(imp.xbongo, imp.pzone, 7757, {
-                reply_markup: {
-                    inline_keyboard: [
-                        [
-                            { text: 'Watoa huduma, Omba kuwa Verified ✅', url: 'http://t.me/blackberry255' }
-                        ],
-                        [
-                            { text: 'Hapa! List ya watoa huduma waaminifu', url: 'https://t.me/rahatupu_tzbot?start=verified_list' }
+        let chan_id = ctx.channelPost.chat.id
+        if(chan_id == imp.malayaDB && ctx.channelPost.reply_to_message) {
+            let msg = ctx.channelPost.text
+            let msg_id = ctx.channelPost.message_id
+            let rpid = ctx.channelPost.reply_to_message.message_id
+            if(msg.toLowerCase().includes('add malaya')) {
+                let mkoa = msg.split('malaya - ')[1]
+                let malaya_id = rpid + '-' + msg_id
+                await malayaModel.create({
+                    mkoa, poaId: malaya_id
+                })
+                let del = await ctx.reply(`Malaya posted successfully as:\nMkoa: ${mkoa}\nID: ${malaya_id}`, {
+                    reply_to_message_id: rpid,
+                    reply_markup: {
+                        inline_keyboard: [
+                            [
+                                {text: 'Publish This', callback_data: `push_bitch_${malaya_id}`}
+                            ],
+                            [
+                                {text: 'Ignore', callback_data: `ignore_push`}
+                            ]
                         ]
-                    ]
-                }
-            })
+                    }
+                })
+            }
         }
+    } catch (err) {
+        console.log(err.message)
+        await ctx.reply(err.message)
+    }
+})
 
+bot.on('callback_query', async ctx=> {
+    try {
+        let cdata = ctx.callbackQuery.data
+        let cmsgid = ctx.callbackQuery.message.message_id
+        
+        if(cdata.includes('push_bitch_')) {
+            //
+        } else if(cdata.includes('ignore_push')) {
+            //
+        }
     } catch (err) {
         console.log(err.message)
     }
