@@ -75,7 +75,7 @@ bot.start(async ctx => {
             if(pload.includes('RTBOT-')) {
                 let nano = pload.split('RTBOT-')[1]
                 let vid = await videosDB.findOne({nano})
-                let txt = `Unakaribia kudownload <b>${vid.caption}</b>\n\n<i>fungua button hapo chini kwa takribani sekunde 10 kupata video hii</b>`
+                let txt = `Unakaribia kudownload <b>${vid.caption}</b>\n\n<i>fungua button hapo chini kwa takribani sekunde 10 kupata video hii</i>`
                 let url = `http://get-ohmy-full-video.font5.net/rahaatuupu/${userid}/AgADzw4AAib1cFE3268`
 
                 await ctx.reply(txt, {
