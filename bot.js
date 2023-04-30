@@ -340,10 +340,15 @@ bot.on('chat_join_request', async ctx => {
     let username = ctx.chatJoinRequest.from.first_name
     let channel_id = ctx.chatJoinRequest.chat.id
     let cha_title = ctx.chatJoinRequest.chat.title
+    let handle = 'unknown'
 
     const notOperate = [imp.xbongo, imp.rtgrp]
 
     try {
+        //check @handle
+        if(ctx.chatJoinRequest.from.username) {
+            handle = ctx.chatJoinRequest.from.username
+        }
         //dont process xbongo
         if (!notOperate.includes(channel_id)) {
             let user = await rtStarterModel.findOne({chatid})
