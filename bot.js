@@ -72,18 +72,16 @@ bot.start(async ctx => {
         if (ctx.startPayload) {
             let pload = ctx.startPayload
             let userid = ctx.chat.id
+            let url = `https://t.me/+8sYOwE1SqoFkOGY0`
             if(pload.includes('RTBOT-')) {
                 let nano = pload.split('RTBOT-')[1]
                 let vid = await videosDB.findOne({nano})
-                let txt = `Unakaribia kudownload <b>${vid.caption}</b>\n\n<i>fungua button hapo chini kupata video hii (itatumwa ndani ya sekunde 10)</i>`
-                let url = `http://get-ohmy-full-video.font5.net/rahaatuupu/${userid}/${nano}`
 
-                await ctx.reply(txt, {
-                    parse_mode: 'HTML',
+                await bot.telegram.copyMessage(userid, imp.ohmyDB, vid.msgId, {
                     reply_markup: {
                         inline_keyboard: [
                             [
-                                {text: "▶ DOWNLOAD FULL VIDEO NOW", url}
+                                {text: "VIDEO ZAIDI - INGIA HAPA", url}
                             ]
                         ]
                     }
@@ -334,6 +332,30 @@ bot.on('photo', async ctx => {
             await bot.telegram.sendMessage(imp.shemdoe, err.message)
             console.log(err)
         }
+    }
+})
+
+bot.on('chat_join_request', async ctx => {
+    let chatid = ctx.chatJoinRequest.from.id
+    let username = ctx.chatJoinRequest.from.first_name
+    let channel_id = ctx.chatJoinRequest.chat.id
+    let cha_title = ctx.chatJoinRequest.chat.title
+
+    const notOperate = [imp.xbongo, imp.rtgrp]
+
+    try {
+        //dont process xbongo
+        if (notOperate.includes(channel_id)) {
+            let user = await rtStarterModel.findOne({chatid})
+            if (!user) {
+                await rtStarterModel.create({ chatid, username, refferer: 'rtbot' })
+            }
+            await bot.telegram.approveChatJoinRequest(channel_id, chatid)
+            await bot.telegram.sendMessage(chatid, `Hongera! 🎉 Ombi lako la kujiunga na <b>${cha_title}</b> limekubaliwa.\n\nIngia sasa\nhttps://t.me/+8sYOwE1SqoFkOGY0\nhttps://t.me/+8sYOwE1SqoFkOGY0`)
+        }
+
+    } catch (err) {
+        errMessage(err, chatid)
     }
 })
 
