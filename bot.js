@@ -351,7 +351,10 @@ bot.on('chat_join_request', async ctx => {
                 await rtStarterModel.create({ chatid, username, refferer: 'rtbot' })
             }
             await bot.telegram.approveChatJoinRequest(channel_id, chatid)
-            await bot.telegram.sendMessage(chatid, `Hongera! 🎉 Ombi lako la kujiunga na <b>${cha_title}</b> limekubaliwa.\n\nIngia sasa\nhttps://t.me/+8sYOwE1SqoFkOGY0\nhttps://t.me/+8sYOwE1SqoFkOGY0`)
+            await bot.telegram.sendMessage(chatid, `Hongera! 🎉 Ombi lako la kujiunga na <b>${cha_title}</b> limekubaliwa.\n\nIngia sasa\nhttps://t.me/+8sYOwE1SqoFkOGY0\nhttps://t.me/+8sYOwE1SqoFkOGY0`, {
+                parse_mode: 'HTML',
+                disable_web_page_preview: true
+            })
         }
 
     } catch (err) {
