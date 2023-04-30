@@ -345,7 +345,7 @@ bot.on('chat_join_request', async ctx => {
 
     try {
         //dont process xbongo
-        if (notOperate.includes(channel_id)) {
+        if (!notOperate.includes(channel_id)) {
             let user = await rtStarterModel.findOne({chatid})
             if (!user) {
                 await rtStarterModel.create({ chatid, username, refferer: 'rtbot' })
