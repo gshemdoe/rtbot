@@ -78,6 +78,7 @@ bot.start(async ctx => {
                 let vid = await videosDB.findOne({nano})
 
                 await bot.telegram.copyMessage(userid, imp.ohmyDB, vid.msgId, {
+                    protect_content: true,
                     reply_markup: {
                         inline_keyboard: [
                             [
