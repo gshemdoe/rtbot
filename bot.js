@@ -77,6 +77,8 @@ bot.start(async ctx => {
                 let nano = pload.split('RTBOT-')[1]
                 let vid = await videosDB.findOne({nano})
 
+                await ctx.sendChatAction('upload_video')
+                await delay(1000)
                 await bot.telegram.copyMessage(userid, imp.ohmyDB, vid.msgId, {
                     protect_content: true,
                     reply_markup: {
