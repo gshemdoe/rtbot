@@ -56,7 +56,7 @@ async function create(ctx) {
 
         if (!user) {
             await rtStarterModel.create({
-                chatid, username, handle, refferer
+                chatid, username, handle, refferer, free: 5, paid: false, startDate: null, endDate: null
             })
         }
     } catch (error) {
@@ -73,9 +73,9 @@ bot.start(async ctx => {
             let pload = ctx.startPayload
             let userid = ctx.chat.id
             let url = `https://t.me/+8sYOwE1SqoFkOGY0`
-            if(pload.includes('RTBOT-')) {
+            if (pload.includes('RTBOT-')) {
                 let nano = pload.split('RTBOT-')[1]
-                let vid = await videosDB.findOne({nano})
+                let vid = await videosDB.findOne({ nano })
 
                 await ctx.sendChatAction('upload_video')
                 await delay(1000)
@@ -84,7 +84,7 @@ bot.start(async ctx => {
                     reply_markup: {
                         inline_keyboard: [
                             [
-                                {text: "VIDEO ZAIDI - INGIA HAPA", url}
+                                { text: "VIDEO ZAIDI - INGIA HAPA", url }
                             ]
                         ]
                     }
@@ -105,6 +105,42 @@ bot.start(async ctx => {
 
     } catch (err) {
         console.log(err.message)
+    }
+})
+
+bot.command('wote', async ctx => {
+    await rtStarterModel.updateMany({}, {
+        $set: {
+            free: 5,
+            paid: false,
+            startDate: null,
+            endDate: null
+        }
+    })
+})
+
+bot.command('paid', async ctx => {
+    try {
+        let startDate = new Date()
+        startDate.setHours(startDate.getHours() + 3)
+
+        let endDate = new Date()
+        endDate.setDate(endDate.getDate() + 30)
+
+        let chatid = Number(ctx.message.text.split('paid=')[1])
+        let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, { $set: { paid: true, startDate, endDate} }, {new: true})
+
+        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.startDate).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}\nEnd Date: ${new Date(upuser.endDate).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}`
+
+        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zote nzima za RT Premium kwa mwezi mzima.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.startDate).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}\n📅 Yataisha: ${new Date(upuser.endDate).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}`
+
+        await ctx.reply(txt1)
+        await delay(2000)
+        await bot.telegram.sendMessage(chatid, txt2, {parse_mode: 'HTML'})
+    } catch (err) {
+        console.log(err.message)
+        await ctx.reply(err.message)
+        .catch(e => console.log(e.message))
     }
 })
 
@@ -176,14 +212,14 @@ bot.command('/convo', async ctx => {
 
 })
 
-bot.on('channel_post', async ctx=> {
+bot.on('channel_post', async ctx => {
     try {
         let chan_id = ctx.channelPost.chat.id
-        if(chan_id == imp.malayaDB && ctx.channelPost.reply_to_message) {
+        if (chan_id == imp.malayaDB && ctx.channelPost.reply_to_message) {
             let msg = ctx.channelPost.text
             let msg_id = ctx.channelPost.message_id
             let rpid = ctx.channelPost.reply_to_message.message_id
-            if(msg.toLowerCase().includes('add malaya')) {
+            if (msg.toLowerCase().includes('add malaya')) {
                 let mkoa = msg.split('malaya - ')[1]
                 let malaya_id = rpid + '-' + msg_id
                 await malayaModel.create({
@@ -194,10 +230,10 @@ bot.on('channel_post', async ctx=> {
                     reply_markup: {
                         inline_keyboard: [
                             [
-                                {text: 'Publish This', callback_data: `push_bitch_${malaya_id}`}
+                                { text: 'Publish This', callback_data: `push_bitch_${malaya_id}` }
                             ],
                             [
-                                {text: 'Ignore', callback_data: `ignore_push`}
+                                { text: 'Ignore', callback_data: `ignore_push` }
                             ]
                         ]
                     }
@@ -210,14 +246,14 @@ bot.on('channel_post', async ctx=> {
     }
 })
 
-bot.on('callback_query', async ctx=> {
+bot.on('callback_query', async ctx => {
     try {
         let cdata = ctx.callbackQuery.data
         let cmsgid = ctx.callbackQuery.message.message_id
-        
-        if(cdata.includes('push_bitch_')) {
+
+        if (cdata.includes('push_bitch_')) {
             //
-        } else if(cdata.includes('ignore_push')) {
+        } else if (cdata.includes('ignore_push')) {
             //
         }
     } catch (err) {
@@ -349,12 +385,12 @@ bot.on('chat_join_request', async ctx => {
 
     try {
         //check @handle
-        if(ctx.chatJoinRequest.from.username) {
+        if (ctx.chatJoinRequest.from.username) {
             handle = ctx.chatJoinRequest.from.username
         }
         //dont process xbongo
         if (!notOperate.includes(channel_id)) {
-            let user = await rtStarterModel.findOne({chatid})
+            let user = await rtStarterModel.findOne({ chatid })
             if (!user) {
                 await rtStarterModel.create({ chatid, username, refferer: 'rtbot' })
             }
