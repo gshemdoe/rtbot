@@ -130,9 +130,9 @@ bot.command('paid', async ctx => {
         let chatid = Number(ctx.message.text.split('paid=')[1])
         let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, { $set: { paid: true, startDate, endDate} }, {new: true})
 
-        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.startDate).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}\nEnd Date: ${new Date(upuser.endDate).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}`
+        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.startDate).toLocaleString('en-GB')}\nEnd Date: ${new Date(upuser.endDate).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}`
 
-        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zote nzima za RT Premium kwa mwezi mzima.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.startDate).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}\n📅 Yataisha: ${new Date(upuser.endDate).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}`
+        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zote nzima za RT Premium kwa mwezi mzima.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.startDate).toLocaleString('en-GB')}\n📅 Yataisha: ${new Date(upuser.endDate).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}`
 
         await ctx.reply(txt1)
         await delay(2000)
