@@ -58,7 +58,7 @@ bot.start(async ctx => {
 
                 let user = await rtStarterModel.findOne({ chatid: userid })
                 if (user.paid == true) {
-                    //
+                    await call_function.sendPaidVideo(ctx, delay, bot, imp, vid)
                 }
 
                 if (user.paid == false && user.free > 0) {

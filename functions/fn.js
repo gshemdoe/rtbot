@@ -27,7 +27,7 @@ const createUser = async (ctx) => {
 const sendFreeVideo = async (ctx, delay, bot, imp, vid, upd) => {
     let url = `https://t.me/+8sYOwE1SqoFkOGY0`
     await ctx.sendChatAction('upload_video')
-    await bot.telegram.copyMessage(userid, imp.ohmyDB, vid.msgId, {
+    await bot.telegram.copyMessage(ctx.chat.id, imp.ohmyDB, vid.msgId, {
         protect_content: true,
         reply_markup: {
             inline_keyboard: [
@@ -45,7 +45,7 @@ const sendFreeVideo = async (ctx, delay, bot, imp, vid, upd) => {
 const sendPaidVideo = async (ctx, delay, bot, imp, vid) => {
     await ctx.sendChatAction('upload_video')
     await delay(1000)
-    await bot.telegram.copyMessage(userid, imp.ohmyDB, vid.msgId, {
+    await bot.telegram.copyMessage(ctx.chat.id, imp.ohmyDB, vid.msgId, {
         protect_content: false,
         reply_markup: {
             inline_keyboard: [
