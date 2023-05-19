@@ -5,6 +5,9 @@ const rtStarterModel = require('./database/chats')
 const malayaModel = require('./database/malaya')
 const videosDB = require('./database/db')
 
+//Middlewares
+const call_function = require('./functions/fn')
+
 
 const bot = new Telegraf(process.env.BOT_TOKEN)
     .catch((err) => console.log(err.message))
@@ -41,54 +44,31 @@ const imp = {
 //delaying
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
-async function create(ctx) {
-    try {
-        let chatid = ctx.chat.id
-        let username = ctx.chat.first_name
-        let refferer = 'rtbot'
-        let handle = 'unknown'
-
-        if (ctx.chat.username) {
-            handle = ctx.chat.username
-        }
-
-        let user = await rtStarterModel.findOne({ chatid })
-
-        if (!user) {
-            await rtStarterModel.create({
-                chatid, username, handle, refferer, free: 5, paid: false, startDate: null, endDate: null
-            })
-        }
-    } catch (error) {
-        console.log(error.message)
-    }
-}
-
 bot.start(async ctx => {
     try {
         //add to database if not
-        await create(ctx)
+        await call_function.createUser(ctx)
 
         if (ctx.startPayload) {
             let pload = ctx.startPayload
             let userid = ctx.chat.id
-            let url = `https://t.me/+8sYOwE1SqoFkOGY0`
             if (pload.includes('RTBOT-')) {
                 let nano = pload.split('RTBOT-')[1]
                 let vid = await videosDB.findOne({ nano })
 
-                await ctx.sendChatAction('upload_video')
-                await delay(1000)
-                await bot.telegram.copyMessage(userid, imp.ohmyDB, vid.msgId, {
-                    protect_content: true,
-                    reply_markup: {
-                        inline_keyboard: [
-                            [
-                                { text: "VIDEO ZAIDI - INGIA HAPA", url }
-                            ]
-                        ]
-                    }
-                })
+                let user = await rtStarterModel.findOne({ chatid: userid })
+                if (user.paid == true) {
+                    //
+                }
+
+                if (user.paid == false && user.free > 0) {
+                    let upd = await rtStarterModel.findOneAndUpdate({ chatid: userid }, { $inc: { free: -1 } }, { new: true })
+                    await call_function.sendFreeVideo(ctx, delay, bot, imp, vid, upd)
+                } else if (user.paid == false && user.free < 1) {
+                    await ctx.sendChatAction('typing')
+                    await delay(1500)
+                    await bot.telegram.copyMessage(userid, imp.pzone, 8095)
+                }
             }
             if (pload.toLowerCase() == 'verified_list') {
                 await bot.telegram.copyMessage(ctx.chat.id, imp.pzone, 7755, {
@@ -128,19 +108,19 @@ bot.command('paid', async ctx => {
         endDate.setDate(endDate.getDate() + 30)
 
         let chatid = Number(ctx.message.text.split('paid=')[1])
-        let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, { $set: { paid: true, startDate, endDate} }, {new: true})
+        let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, { $set: { paid: true, startDate, endDate } }, { new: true })
 
-        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.startDate).toLocaleString('en-GB')}\nEnd Date: ${new Date(upuser.endDate).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}`
+        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.startDate).toLocaleString('en-GB')}\nEnd Date: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
-        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zote nzima za RT Premium kwa mwezi mzima.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.startDate).toLocaleString('en-GB')}\n📅 Yataisha: ${new Date(upuser.endDate).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}`
+        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zote nzima za RT Premium kwa mwezi mzima.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.startDate).toLocaleString('en-GB')}\n📅 Yataisha: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
         await ctx.reply(txt1)
         await delay(2000)
-        await bot.telegram.sendMessage(chatid, txt2, {parse_mode: 'HTML'})
+        await bot.telegram.sendMessage(chatid, txt2, { parse_mode: 'HTML' })
     } catch (err) {
         console.log(err.message)
         await ctx.reply(err.message)
-        .catch(e => console.log(e.message))
+            .catch(e => console.log(e.message))
     }
 })
 
@@ -250,11 +230,16 @@ bot.on('callback_query', async ctx => {
     try {
         let cdata = ctx.callbackQuery.data
         let cmsgid = ctx.callbackQuery.message.message_id
+        let chatid = ctx.callbackQuery.from.id
 
-        if (cdata.includes('push_bitch_')) {
-            //
-        } else if (cdata.includes('ignore_push')) {
-            //
+        if (cdata == 'salio') {
+            let user = await rtStarterModel.findOne({ chatid })
+            if (user.paid == true) {
+                let txt = `Malipo yako:\n\n📅 Yameanza: ${new Date(user.startDate).toLocaleString('en-GB')}\n📅 Yataisha: ${new Date(user.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+                await ctx.answerCbQuery(txt, { cache_time: 10, show_alert: true })
+            } else {
+                await ctx.reply('Hakuna malipo active kwenye account yako, lipia tena kuendeleza huduma.')
+            }
         }
     } catch (err) {
         console.log(err.message)
@@ -273,19 +258,7 @@ bot.on('text', async ctx => {
                 let userid = Number(ids.split('&mid=')[0])
                 let mid = Number(ids.split('&mid=')[1])
 
-                if (my_msg == 'block 666') {
-                    await rtStarterModel.findOneAndUpdate({ chatid: userid }, { blocked: true })
-                    await ctx.reply(userid + ' blocked for mass massaging')
-                }
-
-                else if (my_msg == 'unblock 666') {
-                    await rtStarterModel.findOneAndUpdate({ chatid: userid }, { blocked: false })
-                    await ctx.reply(userid + ' unblocked for mass massaging')
-                }
-
-                else {
-                    await bot.telegram.copyMessage(userid, myid, my_msg_id, { reply_to_message_id: mid })
-                }
+                await bot.telegram.copyMessage(userid, myid, my_msg_id, { reply_to_message_id: mid })
 
             }
 
@@ -296,7 +269,6 @@ bot.on('text', async ctx => {
                 let userid = Number(ids.split('&mid=')[0])
                 let mid = Number(ids.split('&mid=')[1])
 
-
                 await bot.telegram.sendMessage(userid, my_msg, { reply_to_message_id: mid })
             }
         }
@@ -304,7 +276,7 @@ bot.on('text', async ctx => {
 
         else {
             //create user if not on database
-            await create(ctx)
+            await call_function.createUser(ctx)
 
             let userid = ctx.chat.id
             let txt = ctx.message.text
@@ -392,7 +364,7 @@ bot.on('chat_join_request', async ctx => {
         if (!notOperate.includes(channel_id)) {
             let user = await rtStarterModel.findOne({ chatid })
             if (!user) {
-                await rtStarterModel.create({ chatid, username, refferer: 'rtbot' })
+                await rtStarterModel.create({ chatid, username, handle, refferer: 'rtbot', free: 5, paid: false, startDate: null, endDate: null })
             }
             await bot.telegram.approveChatJoinRequest(channel_id, chatid)
             await bot.telegram.sendMessage(chatid, `Hongera! 🎉 Ombi lako la kujiunga na <b>${cha_title}</b> limekubaliwa.\n\nIngia sasa\nhttps://t.me/+8sYOwE1SqoFkOGY0\nhttps://t.me/+8sYOwE1SqoFkOGY0`, {
