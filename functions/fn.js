@@ -28,7 +28,6 @@ const sendFreeVideo = async (ctx, delay, bot, imp, vid, upd) => {
     let url = `https://t.me/+8sYOwE1SqoFkOGY0`
     await ctx.sendChatAction('upload_video')
     await bot.telegram.copyMessage(ctx.chat.id, imp.ohmyDB, vid.msgId, {
-        protect_content: true,
         reply_markup: {
             inline_keyboard: [
                 [
@@ -39,14 +38,13 @@ const sendFreeVideo = async (ctx, delay, bot, imp, vid, upd) => {
     })
     await ctx.sendChatAction('typing')
     await delay(2000)
-    await ctx.reply(`Umepokea Full Video bure. Umebakiwa na video <b>${upd.free}</b> kati ya video <b>5</b> za bure.`, {parse_mode: 'HTML'})
+    return await ctx.reply(`Umepokea Full Video bure. Umebakiwa na video <b>${upd.free}</b> kati ya video <b>5</b> za bure.`, {parse_mode: 'HTML'})
 }
 
 const sendPaidVideo = async (ctx, delay, bot, imp, vid) => {
     await ctx.sendChatAction('upload_video')
     await delay(1000)
-    await bot.telegram.copyMessage(ctx.chat.id, imp.ohmyDB, vid.msgId, {
-        protect_content: false,
+    return await bot.telegram.copyMessage(ctx.chat.id, imp.ohmyDB, vid.msgId, {
         reply_markup: {
             inline_keyboard: [
                 [
