@@ -112,7 +112,7 @@ bot.command('paid', async ctx => {
 
         let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.startDate).toLocaleString('en-GB')}\nEnd Date: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
-        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zote nzima za RT Premium kwa mwezi mzima.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.startDate).toLocaleString('en-GB')}\n📅 Yataisha: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zote nzima za RT Premium kwa mwezi mzima.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.startDate).toLocaleString('en-GB', {timeZone: 'Africa/Abidjan'})}\n📅 Yataisha: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
         await ctx.reply(txt1)
         await delay(2000)
@@ -235,7 +235,16 @@ bot.on('callback_query', async ctx => {
         if (cdata == 'salio') {
             let user = await rtStarterModel.findOne({ chatid })
             if (user.paid == true) {
-                let txt = `Malipo yako:\n\n📅 Yameanza: ${new Date(user.startDate).toLocaleString('en-GB')}\n📅 Yataisha: ${new Date(user.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+                //no +3 as todays date and endDate are UTC
+                let diff = Math.abs(new Date(user.endDate) - new Date())
+                let masaa = ``
+                let siku = Math.trunc(diff/1000/60/60/24)
+                let remnd = Math.trunc(diff/1000/60/60%24)
+                if(remnd != 0) {
+                    if(remnd == 1) {masaa = `na lisaa ${remnd}`}
+                    else {masaa = `na masaa ${remnd}`}
+                }
+                let txt = `Malipo yako:\n\n📅 Yameanza: ${new Date(user.startDate).toLocaleString('en-GB', {timeZone: 'Africa/Abidjan'})}\n📅 Yataisha: ${new Date(user.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n\nUmebakiwa na siku ${siku} ${masaa}`
                 await ctx.answerCbQuery(txt, { cache_time: 10, show_alert: true })
             } else {
                 await ctx.reply('Hakuna malipo active kwenye account yako, lipia tena kuendeleza huduma.')
