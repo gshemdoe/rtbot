@@ -111,7 +111,32 @@ bot.command('paid', async ctx => {
 
         let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.startDate).toLocaleString('en-GB')}\nEnd Date: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
-        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zote nzima za RT Premium kwa mwezi mzima.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.startDate).toLocaleString('en-GB', {timeZone: 'Africa/Abidjan'})}\n📅 Yataisha: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zote nzima za RT Premium kwa mwezi mzima bila kikomo.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.startDate).toLocaleString('en-GB', {timeZone: 'Africa/Abidjan'})}\n📅 Yataisha: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+
+        await ctx.reply(txt1)
+        await delay(2000)
+        await bot.telegram.sendMessage(chatid, txt2, { parse_mode: 'HTML' })
+    } catch (err) {
+        console.log(err.message)
+        await ctx.reply(err.message)
+            .catch(e => console.log(e.message))
+    }
+})
+
+bot.command('paid60', async ctx => {
+    try {
+        let startDate = new Date()
+        startDate.setHours(startDate.getHours() + 3)
+
+        let endDate = new Date()
+        endDate.setDate(endDate.getDate() + 60)
+
+        let chatid = Number(ctx.message.text.split('paid60=')[1])
+        let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, { $set: { paid: true, startDate, endDate } }, { new: true })
+
+        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.startDate).toLocaleString('en-GB')}\nEnd Date: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+
+        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zote nzima za RT Premium kwa miezi miwili bila kikomo.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.startDate).toLocaleString('en-GB', {timeZone: 'Africa/Abidjan'})}\n📅 Yataisha: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
         await ctx.reply(txt1)
         await delay(2000)
