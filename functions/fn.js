@@ -38,7 +38,7 @@ const sendFreeVideo = async (ctx, delay, bot, imp, vid, upd) => {
     })
     await ctx.sendChatAction('typing')
     await delay(2000)
-    return await ctx.reply(`Umepokea Full Video bure. Umebakiwa na video <b>${upd.free}</b> kati ya video <b>5</b> za bure.`, {parse_mode: 'HTML'})
+    return await ctx.reply(`Umepokea Full Video bure. Umebakiwa na video <b>${upd.free}</b> kati ya <b>5</b> za bure.`, { parse_mode: 'HTML' })
 }
 
 const sendPaidVideo = async (ctx, delay, bot, imp, vid) => {
@@ -55,8 +55,31 @@ const sendPaidVideo = async (ctx, delay, bot, imp, vid) => {
     })
 }
 
+const payingInfo = async (bot, ctx, delay, imp, userid) => {
+    await ctx.sendChatAction('typing')
+    await delay(1500)
+    await bot.telegram.copyMessage(userid, imp.matangazoDB, 7, {
+        reply_markup: {
+            inline_keyboard: [
+                [
+                    {text: 'M-PESA 🇹🇿', callback_data: 'voda'},
+                    {text: 'Tigo Pesa 🇹🇿', callback_data: 'tigo'}
+                ],
+                [
+                    {text: 'Airtel 🇹🇿', callback_data: 'airtel'},
+                    {text: 'Halotel 🇹🇿', callback_data: 'halotel'}
+                ],
+                [
+                    {text: '⛑ Msaada / Help ⛑', callback_data: 'help-msaada'}
+                ]
+            ]
+        }
+    })
+}
+
 module.exports = {
     createUser,
     sendFreeVideo,
-    sendPaidVideo
+    sendPaidVideo,
+    payingInfo
 }

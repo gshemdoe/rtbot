@@ -38,7 +38,8 @@ const imp = {
     logsBin: -1001845473074,
     mylove: -1001748858805,
     malayaDB: -1001783364680,
-    rtgrp: -1001899312985
+    rtgrp: -1001899312985,
+    matangazoDB: -1001570087172
 }
 
 //delaying
@@ -65,9 +66,7 @@ bot.start(async ctx => {
                     let upd = await rtStarterModel.findOneAndUpdate({ chatid: userid }, { $inc: { free: -1 } }, { new: true })
                     await call_function.sendFreeVideo(ctx, delay, bot, imp, vid, upd)
                 } else if (user.paid == false && user.free < 1) {
-                    await ctx.sendChatAction('typing')
-                    await delay(1500)
-                    await bot.telegram.copyMessage(userid, imp.pzone, 8095)
+                    await call_function.payingInfo(bot, ctx, delay, imp, userid)
                 }
             }
             if (pload.toLowerCase() == 'verified_list') {
@@ -249,6 +248,21 @@ bot.on('callback_query', async ctx => {
             } else {
                 await ctx.reply('Hakuna malipo active kwenye account yako, lipia tena kuendeleza huduma.')
             }
+        } else if (cdata == 'voda') {
+            await delay(250)
+            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 8)
+        } else if (cdata == 'tigo') {
+            await delay(250)
+            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 9)
+        } else if (cdata == 'airtel') {
+            await delay(250)
+            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 10)
+        } else if (cdata == 'halotel') {
+            await delay(250)
+            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 11)
+        } else if (cdata == 'help-msaada') {
+            await delay(250)
+            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 12)
         }
     } catch (err) {
         console.log(err.message)
