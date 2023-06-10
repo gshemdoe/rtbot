@@ -15,7 +15,7 @@ const createUser = async (ctx) => {
 
         if (!user) {
             await rtStarterModel.create({
-                chatid, username, handle, refferer, free: 5, paid: false, startDate: null, endDate: null
+                chatid, username, handle, refferer, free: 5, paid: false
             })
         }
     } catch (error) {
