@@ -59,7 +59,16 @@ bot.start(async ctx => {
 
                 let user = await rtStarterModel.findOne({ chatid: userid })
                 if (user.paid == true) {
-                    await call_function.sendPaidVideo(ctx, delay, bot, imp, vid)
+                    if (user.malipo.end > Date.now()) {
+                        await call_function.sendPaidVideo(ctx, delay, bot, imp, vid)
+                    } else {
+                        let txt = `Samahani! Malipo yako yamekwisha muda wake:\n\n📅 Yalianza: ${new Date(user.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n📅 Yameisha: ${new Date(user.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+                        await ctx.reply(txt)
+                        await delay(1000)
+                        await call_function.payingInfo(bot, ctx, delay, imp, userid)
+
+                        return await user.updateOne({$set: {paid: false}})
+                    }
                 }
 
                 if (user.paid == false && user.free > 0) {
@@ -87,15 +96,6 @@ bot.start(async ctx => {
     }
 })
 
-bot.command('wote', async ctx => {
-    await rtStarterModel.updateMany({}, {
-        $unset: {
-            "startDate": 1,
-            "endDate": 1
-        }
-    })
-})
-
 bot.command('paid', async ctx => {
     try {
         let start = Date.now()  //get UTC ms
@@ -103,12 +103,12 @@ bot.command('paid', async ctx => {
 
         let chatid = Number(ctx.message.text.split('paid=')[1])
         let user = await rtStarterModel.findOne({ chatid })
-        let upuser = await rtStarterModel.findOneAndUpdate({chatid}, {
+        let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, {
             $set: { paid: true, malipo: { start, end } },
-            $push: {payHistory: {no: user.payHistory.length + 1, start, end}}
-        }, {new: true})
+            $push: { payHistory: { no: user.payHistory.length + 1, start, end } }
+        }, { new: true })
 
-        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.malipo.start).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}\nEnd Date: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\nEnd Date: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
         let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zetu zote nzima za RT Premium kwa mwezi mzima bila kikomo.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n📅 Yataisha: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
@@ -127,14 +127,14 @@ bot.command('paid60', async ctx => {
         let start = Date.now()  //get UTC ms
         let end = start + (60 * 24 * 60 * 60 * 1000)
 
-        let chatid = Number(ctx.message.text.split('paid=')[1])
+        let chatid = Number(ctx.message.text.split('paid60=')[1])
         let user = await rtStarterModel.findOne({ chatid })
-        let upuser = await user.updateOne({
+        let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, {
             $set: { paid: true, malipo: { start, end } },
-            $push: {payHistory: {no: user.payHistory.length + 1, start, end}}
+            $push: { payHistory: { no: user.payHistory.length + 1, start, end } }
         }, { new: true })
 
-        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.malipo.start).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}\nEnd Date: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\nEnd Date: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
         let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zetu zote nzima za RT Premium kwa miezi miwili bila kikomo.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n📅 Yataisha: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
@@ -142,7 +142,7 @@ bot.command('paid60', async ctx => {
         await delay(2000)
         await bot.telegram.sendMessage(chatid, txt2, { parse_mode: 'HTML' })
     } catch (err) {
-        console.log(err.message)
+        console.log(err)
         await ctx.reply(err.message)
             .catch(e => console.log(e.message))
     }
