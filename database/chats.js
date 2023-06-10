@@ -9,7 +9,9 @@ const rtSchema = new Schema({
     free: {type: Number, default: 5},
     paid: {type: Boolean, default: false},
     startDate: {type: Date},
-    endDate: {type: Date}
+    endDate: {type: Date},
+    payHistory: {type: Array},
+    malipo: {type: Object}
 }, {strict: false, timestamps: true })
 
 const model = mongoose.model('rtbot-starter', rtSchema)

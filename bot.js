@@ -89,35 +89,34 @@ bot.start(async ctx => {
 
 bot.command('wote', async ctx => {
     await rtStarterModel.updateMany({}, {
-        $set: {
-            free: 5,
-            paid: false,
-            startDate: null,
-            endDate: null
+        $unset: {
+            "startDate": 1,
+            "endDate": 1
         }
     })
 })
 
 bot.command('paid', async ctx => {
     try {
-        let startDate = new Date()
-        startDate.setHours(startDate.getHours() + 3)
-
-        let endDate = new Date()
-        endDate.setDate(endDate.getDate() + 30)
+        let start = Date.now()  //get UTC ms
+        let end = start + (30 * 24 * 60 * 60 * 1000)
 
         let chatid = Number(ctx.message.text.split('paid=')[1])
-        let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, { $set: { paid: true, startDate, endDate } }, { new: true })
+        let user = await rtStarterModel.findOne({ chatid })
+        let upuser = await rtStarterModel.findOneAndUpdate({chatid}, {
+            $set: { paid: true, malipo: { start, end } },
+            $push: {payHistory: {no: user.payHistory.length + 1, start, end}}
+        }, {new: true})
 
-        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.startDate).toLocaleString('en-GB')}\nEnd Date: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.malipo.start).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}\nEnd Date: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
-        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zote nzima za RT Premium kwa mwezi mzima bila kikomo.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.startDate).toLocaleString('en-GB', {timeZone: 'Africa/Abidjan'})}\n📅 Yataisha: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zetu zote nzima za RT Premium kwa mwezi mzima bila kikomo.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n📅 Yataisha: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
         await ctx.reply(txt1)
         await delay(2000)
         await bot.telegram.sendMessage(chatid, txt2, { parse_mode: 'HTML' })
     } catch (err) {
-        console.log(err.message)
+        console.log(err)
         await ctx.reply(err.message)
             .catch(e => console.log(e.message))
     }
@@ -125,18 +124,19 @@ bot.command('paid', async ctx => {
 
 bot.command('paid60', async ctx => {
     try {
-        let startDate = new Date()
-        startDate.setHours(startDate.getHours() + 3)
+        let start = Date.now()  //get UTC ms
+        let end = start + (60 * 24 * 60 * 60 * 1000)
 
-        let endDate = new Date()
-        endDate.setDate(endDate.getDate() + 60)
+        let chatid = Number(ctx.message.text.split('paid=')[1])
+        let user = await rtStarterModel.findOne({ chatid })
+        let upuser = await user.updateOne({
+            $set: { paid: true, malipo: { start, end } },
+            $push: {payHistory: {no: user.payHistory.length + 1, start, end}}
+        }, { new: true })
 
-        let chatid = Number(ctx.message.text.split('paid60=')[1])
-        let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, { $set: { paid: true, startDate, endDate } }, { new: true })
+        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.malipo.start).toLocaleString('en-GB', {timeZone: 'Africa/Nairobi'})}\nEnd Date: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
-        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.startDate).toLocaleString('en-GB')}\nEnd Date: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
-
-        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zote nzima za RT Premium kwa miezi miwili bila kikomo.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.startDate).toLocaleString('en-GB', {timeZone: 'Africa/Abidjan'})}\n📅 Yataisha: ${new Date(upuser.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zetu zote nzima za RT Premium kwa miezi miwili bila kikomo.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n📅 Yataisha: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
 
         await ctx.reply(txt1)
         await delay(2000)
@@ -260,15 +260,15 @@ bot.on('callback_query', async ctx => {
             let user = await rtStarterModel.findOne({ chatid })
             if (user.paid == true) {
                 //no +3 as todays date and endDate are UTC
-                let diff = Math.abs(new Date(user.endDate) - new Date())
+                let diff = user.malipo.end - Date.now()
                 let masaa = ``
-                let siku = Math.trunc(diff/1000/60/60/24)
-                let remnd = Math.trunc(diff/1000/60/60%24)
-                if(remnd != 0) {
-                    if(remnd == 1) {masaa = `na lisaa ${remnd}`}
-                    else {masaa = `na masaa ${remnd}`}
+                let siku = Math.trunc(diff / 1000 / 60 / 60 / 24)
+                let remnd = Math.trunc(diff / 1000 / 60 / 60 % 24)
+                if (remnd != 0) {
+                    if (remnd == 1) { masaa = `na lisaa ${remnd}` }
+                    else { masaa = `na masaa ${remnd}` }
                 }
-                let txt = `Malipo yako:\n\n📅 Yameanza: ${new Date(user.startDate).toLocaleString('en-GB', {timeZone: 'Africa/Abidjan'})}\n📅 Yataisha: ${new Date(user.endDate).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n\nUmebakiwa na siku ${siku} ${masaa}`
+                let txt = `Malipo yako:\n\n📅 Yameanza: ${new Date(user.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n📅 Yataisha: ${new Date(user.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n\nUmebakiwa na siku ${siku} ${masaa}`
                 await ctx.answerCbQuery(txt, { cache_time: 10, show_alert: true })
             } else {
                 await ctx.reply('Hakuna malipo active kwenye account yako, lipia tena kuendeleza huduma.')
