@@ -7,6 +7,7 @@ const rtSchema = new Schema({
     refferer: {type: String},
     handle: {type: String},
     free: {type: Number, default: 5},
+    points: {type: Number, default: 500},
     paid: {type: Boolean, default: false},
     payHistory: {type: Array},
     malipo: {type: Object}

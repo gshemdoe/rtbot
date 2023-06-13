@@ -96,6 +96,17 @@ bot.start(async ctx => {
     }
 })
 
+bot.command('points', async ctx=> {
+    try {
+        await rtStarterModel.updateMany({paid: true}, {$set: {points: 3000}})
+        await ctx.reply('Paid updated to 3000')
+        await rtStarterModel.updateMany({paid: false}, {$set: {points: 500}})
+        await ctx.reply('Unpaid set to 500')
+    } catch (err) {
+        return await ctx.reply(err.message)
+    }
+})
+
 bot.command('paid', async ctx => {
     try {
         let start = Date.now()  //get UTC ms
