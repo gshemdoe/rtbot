@@ -58,24 +58,10 @@ bot.start(async ctx => {
                 let vid = await videosDB.findOne({ nano })
 
                 let user = await rtStarterModel.findOne({ chatid: userid })
-                if (user.paid == true) {
-                    if (user.malipo.end > Date.now()) {
-                        await call_function.sendPaidVideo(ctx, delay, bot, imp, vid)
-                    } else {
-                        let txt = `Samahani! Malipo yako yamekwisha muda wake:\n\n📅 Yalianza: ${new Date(user.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n📅 Yameisha: ${new Date(user.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
-                        await ctx.reply(txt)
-                        await delay(1000)
-                        await call_function.payingInfo(bot, ctx, delay, imp, userid)
-
-                        return await user.updateOne({$set: {paid: false}})
-                    }
-                }
-
-                if (user.paid == false && user.free > 0) {
-                    let upd = await rtStarterModel.findOneAndUpdate({ chatid: userid }, { $inc: { free: -1 } }, { new: true })
-                    await call_function.sendFreeVideo(ctx, delay, bot, imp, vid, upd)
-                } else if (user.paid == false && user.free < 1) {
-                    await call_function.payingInfo(bot, ctx, delay, imp, userid)
+                if (user.points > 99) {
+                    await call_function.sendPaidVideo(ctx, delay, bot, imp, vid, userid)
+                } else {
+                    await call_function.payingInfo(bot, ctx, delay, imp, userid, 16)
                 }
             }
             if (pload.toLowerCase() == 'verified_list') {
@@ -96,58 +82,43 @@ bot.start(async ctx => {
     }
 })
 
-bot.command('points', async ctx=> {
+bot.command('broadcast', async ctx=> {
     try {
-        await rtStarterModel.updateMany({paid: true}, {$set: {points: 3000}})
-        await ctx.reply('Paid updated to 3000')
-        await rtStarterModel.updateMany({paid: false}, {$set: {points: 500}})
-        await ctx.reply('Unpaid set to 500')
+        let all = await rtStarterModel.find()
+
+        for(let u of all) {
+            if(u.paid == true) {
+                await bot.telegram.copyMessage(u.chatid, imp.matangazoDB, 28)
+                console.log('sent to paid')
+                await delay(40)
+            } else {
+                await bot.telegram.copyMessage(u.chatid, imp.matangazoDB, 29)
+                console.log('sent to bonus')
+                await delay(40)
+            }
+        }
     } catch (err) {
-        return await ctx.reply(err.message)
+        console.log(err.message)
+        if(err.message.includes('blocked')) {
+            await rtStarterModel.findOneAndDelete({chatid: ctx.chat.id})
+            console.log(ctx.chat.id + ' deleted')
+        }
     }
 })
 
 bot.command('paid', async ctx => {
     try {
-        let start = Date.now()  //get UTC ms
-        let end = start + (30 * 24 * 60 * 60 * 1000)
+        let splitter = ctx.message.text.split('=')
+        let chatid = Number(splitter[1])
+        let points = Number(splitter[2])
 
-        let chatid = Number(ctx.message.text.split('paid=')[1])
-        let user = await rtStarterModel.findOne({ chatid })
         let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, {
-            $set: { paid: true, malipo: { start, end } },
-            $push: { payHistory: { no: user.payHistory.length + 1, start, end } }
+            $inc: { points: points },
+            $set: {paid: true}
         }, { new: true })
 
-        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\nEnd Date: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
-
-        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zetu zote nzima za RT Premium kwa mwezi mzima bila kikomo.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n📅 Yataisha: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
-
-        await ctx.reply(txt1)
-        await delay(2000)
-        await bot.telegram.sendMessage(chatid, txt2, { parse_mode: 'HTML' })
-    } catch (err) {
-        console.log(err)
-        await ctx.reply(err.message)
-            .catch(e => console.log(e.message))
-    }
-})
-
-bot.command('paid60', async ctx => {
-    try {
-        let start = Date.now()  //get UTC ms
-        let end = start + (60 * 24 * 60 * 60 * 1000)
-
-        let chatid = Number(ctx.message.text.split('paid60=')[1])
-        let user = await rtStarterModel.findOne({ chatid })
-        let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, {
-            $set: { paid: true, malipo: { start, end } },
-            $push: { payHistory: { no: user.payHistory.length + 1, start, end } }
-        }, { new: true })
-
-        let txt1 = `User payment info updated:\nStart Date: ${new Date(upuser.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\nEnd Date: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
-
-        let txt2 = `Hongera! Malipo yako yamethibitishwa. Sasa unaweza kudownload video zetu zote nzima za RT Premium kwa miezi miwili bila kikomo.\n\n<b>Malipo yako:</b>\n📅 Yameanza: ${new Date(upuser.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n📅 Yataisha: ${new Date(upuser.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}`
+        let txt1 = `User Points Added to ${upuser.points}`
+        let txt2 = `<b>Hongera 🎉\nMalipo yako yamethibitishwa. Umepokea Points ${points} na sasa una jumla ya Points ${upuser.points} kwenye account yako ya RT Malipo.\n\nTumia points zako vizuri. Kumbuka Kila video utakayo download itakugharimu Points 100.\n\nEnjoy, ❤.</b>`
 
         await ctx.reply(txt1)
         await delay(2000)
@@ -269,34 +240,28 @@ bot.on('callback_query', async ctx => {
 
         if (cdata == 'salio') {
             let user = await rtStarterModel.findOne({ chatid })
-            if (user.paid == true) {
-                //no +3 as todays date and endDate are UTC
-                let diff = user.malipo.end - Date.now()
-                let masaa = ``
-                let siku = Math.trunc(diff / 1000 / 60 / 60 / 24)
-                let remnd = Math.trunc(diff / 1000 / 60 / 60 % 24)
-                if (remnd != 0) {
-                    if (remnd == 1) { masaa = `na lisaa ${remnd}` }
-                    else { masaa = `na masaa ${remnd}` }
-                }
-                let txt = `Malipo yako:\n\n📅 Yameanza: ${new Date(user.malipo.start).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n📅 Yataisha: ${new Date(user.malipo.end).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })}\n\nUmebakiwa na siku ${siku} ${masaa}`
-                await ctx.answerCbQuery(txt, { cache_time: 10, show_alert: true })
-            } else {
-                await ctx.reply('Hakuna malipo active kwenye account yako, lipia tena kuendeleza huduma.')
-            }
+            let txt = `Una Points ${user.points} kwenye account yako.`
+            await ctx.answerCbQuery(txt, { cache_time: 10, show_alert: true })
         } else if (cdata == 'voda') {
             await delay(250)
-            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 8)
+            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 17)
         } else if (cdata == 'tigo') {
             await delay(250)
-            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 9)
+            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 18)
         } else if (cdata == 'airtel') {
             await delay(250)
-            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 10)
+            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 19)
         } else if (cdata == 'halotel') {
             await delay(250)
-            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 11)
-        } else if (cdata == 'help-msaada') {
+            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 20)
+        } else if (cdata == 'safaricom') {
+            await delay(250)
+            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 24)
+        } else if (cdata == 'other_networks') {
+            await delay(250)
+            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 23)
+        }
+        else if (cdata == 'help-msaada') {
             await delay(250)
             await bot.telegram.copyMessage(chatid, imp.matangazoDB, 12)
         }
@@ -318,7 +283,6 @@ bot.on('text', async ctx => {
                 let mid = Number(ids.split('&mid=')[1])
 
                 await bot.telegram.copyMessage(userid, myid, my_msg_id, { reply_to_message_id: mid })
-
             }
 
             else if (ctx.message.reply_to_message.photo) {
@@ -342,7 +306,23 @@ bot.on('text', async ctx => {
             let username = ctx.chat.first_name
             let mid = ctx.message.message_id
 
-            await bot.telegram.sendMessage(imp.halot, `<b>${txt}</b> \n\nfrom = <code>${username}</code>\nid = <code>${userid}</code>&mid=${mid}`, { parse_mode: 'HTML', disable_notification: true })
+            switch (txt) {
+                case '💰 Points Zangu':
+                    let user = await rtStarterModel.findOne({ chatid: userid })
+                    await ctx.reply(`Umebakiwa na Points ${user.points}.`)
+                    break;
+
+                case '➕ Ongeza Points':
+                    await call_function.payingInfo(bot, ctx, delay, imp, userid, 26)
+                    break;
+
+                case '⛑ Help / Msaada ⛑':
+                    await bot.telegram.copyMessage(userid, imp.matangazoDB, 25)
+                    break;
+
+                default:
+                    await bot.telegram.sendMessage(imp.halot, `<b>${txt}</b> \n\nfrom = <code>${username}</code>\nid = <code>${userid}</code>&mid=${mid}`, { parse_mode: 'HTML', disable_notification: true })
+            }
         }
 
     } catch (err) {
@@ -393,6 +373,8 @@ bot.on('photo', async ctx => {
                 caption: cap + `\n\nfrom = <code>${username}</code>\nid = <code>${chatid}</code>&mid=${mid}`,
                 parse_mode: 'HTML'
             })
+            let notify = `Hey Boss! Kuna pimbi katuma screenshot.`
+            await bot.telegram.sendMessage(imp.shemdoe, notify)
         }
     } catch (err) {
         if (!err.message) {

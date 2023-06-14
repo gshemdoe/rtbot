@@ -1,4 +1,5 @@
 const rtStarterModel = require('../database/chats')
+const binModel = require('../database/rtbin')
 
 const createUser = async (ctx) => {
     try {
@@ -15,7 +16,7 @@ const createUser = async (ctx) => {
 
         if (!user) {
             await rtStarterModel.create({
-                chatid, username, handle, refferer, free: 5, paid: false, points: 500
+                chatid, username, handle, refferer, paid: false, points: 500
             })
         }
     } catch (error) {
@@ -23,54 +24,61 @@ const createUser = async (ctx) => {
     }
 }
 
-
-const sendFreeVideo = async (ctx, delay, bot, imp, vid, upd) => {
-    let url = `https://t.me/+8sYOwE1SqoFkOGY0`
-    await ctx.sendChatAction('upload_video')
-    await bot.telegram.copyMessage(ctx.chat.id, imp.ohmyDB, vid.msgId, {
-        reply_markup: {
-            inline_keyboard: [
-                [
-                    { text: "VIDEO ZAIDI - INGIA HAPA", url }
-                ]
-            ]
-        }
-    })
-    await ctx.sendChatAction('typing')
-    await delay(2000)
-    return await ctx.reply(`Umepokea Full Video bure. Umebakiwa na video <b>${upd.free}</b> kati ya <b>5</b> za bure.`, { parse_mode: 'HTML' })
-}
-
-const sendPaidVideo = async (ctx, delay, bot, imp, vid) => {
+const sendPaidVideo = async (ctx, delay, bot, imp, vid, userid) => {
+    //upload video
     await ctx.sendChatAction('upload_video')
     await delay(1000)
-    return await bot.telegram.copyMessage(ctx.chat.id, imp.ohmyDB, vid.msgId, {
-        reply_markup: {
-            inline_keyboard: [
-                [
-                    { text: "MUDA ULIOBAKIA", callback_data: 'salio' }
-                ]
-            ]
-        }
-    })
+    let dvid = await bot.telegram.copyMessage(userid, imp.ohmyDB, vid.msgId)
+
+    //check if video sent in past 4hrs
+    //if not add to duplicate and deduct 100 points
+    let dup_checker = await binModel.findOne({ chatid: Number(userid), nano: vid.nano })
+    if (!dup_checker) {
+        await ctx.sendChatAction('typing')
+        await binModel.create({ chatid: Number(userid), nano: vid.nano })
+
+        let rcvr = await rtStarterModel.findOneAndUpdate({ chatid: userid }, { $inc: { points: -100 } }, { new: true })
+        await delay(1500)
+        await ctx.reply(`Umepokea Full Video na Points 100 zimekatwa kutoka katika account yako ya RT Malipo. \n\n<b>Umebakiwa na Points ${rcvr.points}.</b>`, {
+            reply_to_message_id: dvid.message_id,
+            parse_mode: "HTML",
+            reply_markup: {
+                keyboard: [
+                    [
+                        { text: "💰 Points Zangu" },
+                        { text: "➕ Ongeza Points" },
+                    ],
+                    [
+                        { text: "⛑ Help / Msaada ⛑" }
+                    ]
+                ],
+                is_persistent: true,
+                resize_keyboard: true
+            }
+        })
+    }
 }
 
-const payingInfo = async (bot, ctx, delay, imp, userid) => {
+const payingInfo = async (bot, ctx, delay, imp, userid, mid) => {
     await ctx.sendChatAction('typing')
     await delay(1500)
-    await bot.telegram.copyMessage(userid, imp.matangazoDB, 7, {
+    await bot.telegram.copyMessage(userid, imp.matangazoDB, mid, {
         reply_markup: {
             inline_keyboard: [
                 [
-                    {text: 'M-PESA 🇹🇿', callback_data: 'voda'},
-                    {text: 'Tigo Pesa 🇹🇿', callback_data: 'tigo'}
+                    { text: 'M-PESA 🇹🇿', callback_data: 'voda' },
+                    { text: 'Tigo Pesa 🇹🇿', callback_data: 'tigo' }
                 ],
                 [
-                    {text: 'Airtel 🇹🇿', callback_data: 'airtel'},
-                    {text: 'Halotel 🇹🇿', callback_data: 'halotel'}
+                    { text: 'Airtel 🇹🇿', callback_data: 'airtel' },
+                    { text: 'Halotel 🇹🇿', callback_data: 'halotel' }
                 ],
                 [
-                    {text: '⛑ Msaada / Help ⛑', callback_data: 'help-msaada'}
+                    { text: 'SafariCom 🇰🇪', callback_data: 'safaricom' },
+                    { text: 'Other 🏳️', callback_data: 'other_networks' }
+                ],
+                [
+                    { text: '⛑ Help / Msaada ⛑', callback_data: 'help-msaada' }
                 ]
             ]
         }
@@ -79,7 +87,6 @@ const payingInfo = async (bot, ctx, delay, imp, userid) => {
 
 module.exports = {
     createUser,
-    sendFreeVideo,
     sendPaidVideo,
     payingInfo
 }
