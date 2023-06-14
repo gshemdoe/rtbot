@@ -25,12 +25,16 @@ const createUser = async (ctx) => {
 }
 
 const sendPaidVideo = async (ctx, delay, bot, imp, vid, userid) => {
+    let rt = `https://t.me/+lcBycrCJ_9o0ZGI0`
     //upload video
     await ctx.sendChatAction('upload_video')
     await delay(1000)
     let dvid = await bot.telegram.copyMessage(userid, imp.ohmyDB, vid.msgId, {
         reply_markup: {
             inline_keyboard: [
+                [
+                    { text: "← Video Zingine", url: rt },
+                ],
                 [
                     { text: "💰 Points Zangu", callback_data: 'salio' },
                     { text: "➕ Ongeza Points", callback_data: 'ongeza_points' },
@@ -47,7 +51,7 @@ const sendPaidVideo = async (ctx, delay, bot, imp, vid, userid) => {
         await binModel.create({ chatid: Number(userid), nano: vid.nano })
 
         let rcvr = await rtStarterModel.findOneAndUpdate({ chatid: userid }, { $inc: { points: -100 } }, { new: true })
-        await delay(1500)
+        await delay(2000)
         await ctx.reply(`Umepokea Full Video na Points 100 zimekatwa kutoka katika account yako ya RT Malipo. \n\n<b>Umebakiwa na Points ${rcvr.points}.</b>`, {
             reply_to_message_id: dvid.message_id,
             parse_mode: "HTML",
