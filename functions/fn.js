@@ -28,7 +28,16 @@ const sendPaidVideo = async (ctx, delay, bot, imp, vid, userid) => {
     //upload video
     await ctx.sendChatAction('upload_video')
     await delay(1000)
-    let dvid = await bot.telegram.copyMessage(userid, imp.ohmyDB, vid.msgId)
+    let dvid = await bot.telegram.copyMessage(userid, imp.ohmyDB, vid.msgId, {
+        reply_markup: {
+            inline_keyboard: [
+                [
+                    { text: "💰 Points Zangu", callback_data: 'salio' },
+                    { text: "➕ Ongeza Points", callback_data: 'ongeza_points' },
+                ]
+            ]
+        }
+    })
 
     //check if video sent in past 4hrs
     //if not add to duplicate and deduct 100 points

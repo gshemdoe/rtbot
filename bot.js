@@ -82,28 +82,6 @@ bot.start(async ctx => {
     }
 })
 
-bot.command('broadcast', async ctx=> {
-    try {
-        let all = await rtStarterModel.find()
-
-        for(let u of all) {
-            if(u.paid == true) {
-                await bot.telegram.copyMessage(u.chatid, imp.matangazoDB, 28)
-                .catch(e=> console.log(e.message))
-                console.log('sent to paid')
-                await delay(40)
-            } else {
-                await bot.telegram.copyMessage(u.chatid, imp.matangazoDB, 29)
-                .catch(e => console.log(e.message))
-                console.log('sent to bonus')
-                await delay(40)
-            }
-        }
-    } catch (err) {
-        console.log(err.message)
-    }
-})
-
 bot.command('paid', async ctx => {
     try {
         let splitter = ctx.message.text.split('=')
@@ -125,6 +103,16 @@ bot.command('paid', async ctx => {
         console.log(err)
         await ctx.reply(err.message)
             .catch(e => console.log(e.message))
+    }
+})
+
+bot.command('info', async ctx=> {
+    try {
+        let chatid = Number(ctx.message.text.split('/info=')[1])
+        let user = await rtStarterModel.findOne({chatid})
+        await ctx.reply(`User with id ${chatid} has ${user.points} Points`)
+    } catch (err) {
+        await ctx.reply(err.message)
     }
 })
 
@@ -238,8 +226,11 @@ bot.on('callback_query', async ctx => {
 
         if (cdata == 'salio') {
             let user = await rtStarterModel.findOne({ chatid })
-            let txt = `Una Points ${user.points} kwenye account yako.`
+            let txt = `Una Points ${user.points} kwenye account yako ya RT Malipo.`
             await ctx.answerCbQuery(txt, { cache_time: 10, show_alert: true })
+        } else if (cdata == 'ongeza_points') {
+            await delay(250)
+            await call_function.payingInfo(bot, ctx, delay, imp, chatid, 26)
         } else if (cdata == 'voda') {
             await delay(250)
             await bot.telegram.copyMessage(chatid, imp.matangazoDB, 17)
