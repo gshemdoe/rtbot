@@ -89,20 +89,18 @@ bot.command('broadcast', async ctx=> {
         for(let u of all) {
             if(u.paid == true) {
                 await bot.telegram.copyMessage(u.chatid, imp.matangazoDB, 28)
+                .catch(e=> console.log(e.message))
                 console.log('sent to paid')
                 await delay(40)
             } else {
                 await bot.telegram.copyMessage(u.chatid, imp.matangazoDB, 29)
+                .catch(e => console.log(e.message))
                 console.log('sent to bonus')
                 await delay(40)
             }
         }
     } catch (err) {
         console.log(err.message)
-        if(err.message.includes('blocked')) {
-            await rtStarterModel.findOneAndDelete({chatid: ctx.chat.id})
-            console.log(ctx.chat.id + ' deleted')
-        }
     }
 })
 
