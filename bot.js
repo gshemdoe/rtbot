@@ -42,6 +42,9 @@ const imp = {
     matangazoDB: -1001570087172
 }
 
+const miamala = ['nimelipia', 'tayari', 'tayali', 'umetuma kikamilifu', 'umetuma tsh', 'you have paid', 'utambulisho wa muamala', 'confirmed. tsh', 'imethibitishwa. umelipa']
+const admins = [imp.halot, imp.shemdoe]
+
 //delaying
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -90,7 +93,7 @@ bot.command('paid', async ctx => {
 
         let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, {
             $inc: { points: points },
-            $set: {paid: true}
+            $set: { paid: true }
         }, { new: true })
 
         let txt1 = `User Points Added to ${upuser.points}`
@@ -106,10 +109,10 @@ bot.command('paid', async ctx => {
     }
 })
 
-bot.command('info', async ctx=> {
+bot.command('info', async ctx => {
     try {
         let chatid = Number(ctx.message.text.split('/info=')[1])
-        let user = await rtStarterModel.findOne({chatid})
+        let user = await rtStarterModel.findOne({ chatid })
         await ctx.reply(`User with id ${chatid} has ${user.points} Points`)
     } catch (err) {
         await ctx.reply(err.message)
@@ -261,7 +264,7 @@ bot.on('callback_query', async ctx => {
 
 bot.on('text', async ctx => {
     try {
-        if (ctx.message.reply_to_message && ctx.chat.id == imp.halot) {
+        if (ctx.message.reply_to_message && admins.includes(ctx.chat.id)) {
             if (ctx.message.reply_to_message.text) {
                 let my_msg = ctx.message.text
                 let myid = ctx.chat.id
@@ -294,6 +297,12 @@ bot.on('text', async ctx => {
             let txt = ctx.message.text
             let username = ctx.chat.first_name
             let mid = ctx.message.message_id
+
+            for (let m of miamala) {
+                if (txt.toLowerCase().includes(m)) {
+                    await bot.telegram.sendMessage(imp.shemdoe, `<b>${txt}</b> \n\nfrom = <code>${username}</code>\nid = <code>${userid}</code>&mid=${mid}`, { parse_mode: 'HTML' })
+                }
+            }
 
             switch (txt) {
                 case '💰 Points Zangu':
@@ -330,7 +339,7 @@ bot.on('photo', async ctx => {
         let chatid = ctx.chat.id
         let cap = ctx.message.caption
 
-        if (ctx.message.reply_to_message && chatid == imp.halot) {
+        if (ctx.message.reply_to_message && admins.includes(ctx.chat.id)) {
             if (ctx.message.reply_to_message.text) {
                 let umsg = ctx.message.reply_to_message.text
                 let ids = umsg.split('id = ')[1].trim()
@@ -362,8 +371,10 @@ bot.on('photo', async ctx => {
                 caption: cap + `\n\nfrom = <code>${username}</code>\nid = <code>${chatid}</code>&mid=${mid}`,
                 parse_mode: 'HTML'
             })
-            let notify = `Hey Boss! Kuna pimbi katuma screenshot.`
-            await bot.telegram.sendMessage(imp.shemdoe, notify)
+            await bot.telegram.copyMessage(imp.shemdoe, chatid, mid, {
+                caption: cap + `\n\nfrom = <code>${username}</code>\nid = <code>${chatid}</code>&mid=${mid}`,
+                parse_mode: 'HTML'
+            })
         }
     } catch (err) {
         if (!err.message) {
