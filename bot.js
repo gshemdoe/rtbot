@@ -139,6 +139,24 @@ bot.command('stats', async ctx => {
     }
 })
 
+bot.command('salio', async ctx=> {
+    try {
+        let chatid = ctx.chat.id
+        let inf = await rtStarterModel.findOne({chatid})
+        if(inf) {
+            let txt = `Habari ${ctx.chat.first_name}, \n\nUna points *${inf.points}* kwenye account yako ya RT Malipo`
+            await ctx.reply(txt, {
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: [[{text: '➕ Ongeza Points', callback_data: 'ongeza_points'}]]
+                }
+            })
+        } else {await ctx.reply('Samahani! Taarifa zako hazipo kwenye kanzu data yetu.')}
+    } catch (err) {
+        await ctx.reply(err.message)
+    }
+})
+
 bot.command('list', async ctx => {
     try {
         await bot.telegram.copyMessage(ctx.chat.id, imp.pzone, 7755, {
