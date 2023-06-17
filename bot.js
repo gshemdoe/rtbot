@@ -157,6 +157,14 @@ bot.command('salio', async ctx=> {
     }
 })
 
+bot.command('ongeza_pts', async ctx=> {
+    try {
+        await call_function.payingInfo(bot, ctx, delay, imp, ctx.chat.id, 26)
+    } catch (err) {
+        console.log(err.message)
+    }
+})
+
 bot.command('list', async ctx => {
     try {
         await bot.telegram.copyMessage(ctx.chat.id, imp.pzone, 7755, {
@@ -249,31 +257,28 @@ bot.on('callback_query', async ctx => {
             let user = await rtStarterModel.findOne({ chatid })
             let txt = `Una Points ${user.points} kwenye account yako ya RT Malipo.`
             await ctx.answerCbQuery(txt, { cache_time: 10, show_alert: true })
-        } else if (cdata == 'ongeza_points') {
-            await delay(250)
+        } else if (['rudi_nyuma', 'ongeza_points'].includes(cdata)) {
+            await ctx.deleteMessage(cmsgid)
+            await call_function.payingInfo(bot, ctx, delay, imp, chatid, 26)
+        } else if (cdata == 'vid_ongeza_pts') {
             await call_function.payingInfo(bot, ctx, delay, imp, chatid, 26)
         } else if (cdata == 'voda') {
-            await delay(250)
-            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 17)
+            await call_function.mtandaoCallBack(bot, ctx, chatid, imp, 17, cmsgid)
         } else if (cdata == 'tigo') {
-            await delay(250)
-            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 18)
+            await call_function.mtandaoCallBack(bot, ctx, chatid, imp, 18, cmsgid)
         } else if (cdata == 'airtel') {
-            await delay(250)
-            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 19)
+            await call_function.mtandaoCallBack(bot, ctx, chatid, imp, 19, cmsgid)
         } else if (cdata == 'halotel') {
-            await delay(250)
-            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 20)
+            await call_function.mtandaoCallBack(bot, ctx, chatid, imp, 20, cmsgid)
         } else if (cdata == 'safaricom') {
-            await delay(250)
-            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 24)
+            await call_function.rudiNyumaReply(bot, ctx, chatid, imp, 24, cmsgid)
         } else if (cdata == 'other_networks') {
-            await delay(250)
-            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 23)
+            await call_function.rudiNyumaReply(bot, ctx, chatid, imp, 23, cmsgid)
         }
         else if (cdata == 'help-msaada') {
-            await delay(250)
-            await bot.telegram.copyMessage(chatid, imp.matangazoDB, 12)
+            await call_function.rudiNyumaReply(bot, ctx, chatid, imp, 12, cmsgid)
+        } else if (cdata == 'nimelipia') {
+            await call_function.rudiNyumaReply(bot, ctx, chatid, imp, 30, cmsgid)
         }
     } catch (err) {
         console.log(err.message)

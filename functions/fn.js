@@ -37,7 +37,7 @@ const sendPaidVideo = async (ctx, delay, bot, imp, vid, userid) => {
                 ],
                 [
                     { text: "💰 Points Zangu", callback_data: 'salio' },
-                    { text: "➕ Ongeza Points", callback_data: 'ongeza_points' },
+                    { text: "➕ Ongeza Points", callback_data: 'vid_ongeza_pts' },
                 ]
             ]
         }
@@ -74,7 +74,7 @@ const sendPaidVideo = async (ctx, delay, bot, imp, vid, userid) => {
 
 const payingInfo = async (bot, ctx, delay, imp, userid, mid) => {
     await ctx.sendChatAction('typing')
-    await delay(1500)
+    await delay(1000)
     await bot.telegram.copyMessage(userid, imp.matangazoDB, mid, {
         reply_markup: {
             inline_keyboard: [
@@ -98,8 +98,40 @@ const payingInfo = async (bot, ctx, delay, imp, userid, mid) => {
     })
 }
 
+const mtandaoCallBack = async (bot, ctx, chatid, imp, msgid, cbmid) => {
+    await ctx.deleteMessage(cbmid)
+    await bot.telegram.copyMessage(chatid, imp.matangazoDB, msgid, {
+        reply_markup: {
+            inline_keyboard: [
+                [
+                    { text: '✅ Nimelipia Tayari', callback_data: 'nimelipia' }
+                ],
+                [
+                    {text: '← Rudi nyuma', callback_data: 'rudi_nyuma'}
+                ]
+            ]
+        }
+    })
+}
+
+const rudiNyumaReply = async (bot, ctx, chatid, imp, msgid, cbmid) => {
+    await ctx.deleteMessage(cbmid)
+    await bot.telegram.copyMessage(chatid, imp.matangazoDB, msgid, {
+        reply_markup: {
+            inline_keyboard: [
+                [
+                    {text: '← Rudi nyuma', callback_data: 'rudi_nyuma'},
+                    { text: '⛑ Admin', url: 'https://t.me/rt_malipo' }
+                ]
+            ]
+        }
+    })
+}
+
 module.exports = {
     createUser,
     sendPaidVideo,
-    payingInfo
+    payingInfo,
+    mtandaoCallBack,
+    rudiNyumaReply
 }
