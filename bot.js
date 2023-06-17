@@ -165,6 +165,14 @@ bot.command('ongeza_pts', async ctx=> {
     }
 })
 
+bot.command('msaada', async ctx=> {
+    try {
+        await bot.telegram.copyMessage(ctx.chat.id, imp.matangazoDB, 25)
+    } catch (err) {
+        console.log(err.message)
+    }
+})
+
 bot.command('list', async ctx => {
     try {
         await bot.telegram.copyMessage(ctx.chat.id, imp.pzone, 7755, {
