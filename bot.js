@@ -100,7 +100,7 @@ bot.command('paid', async ctx => {
         let txt2 = `<b>Hongera 🎉\nMalipo yako yamethibitishwa. Umepokea Points ${points} na sasa una jumla ya Points ${upuser.points} kwenye account yako ya RT Malipo.\n\nTumia points zako vizuri. Kumbuka Kila video utakayo download itakugharimu Points 100.\n\nEnjoy, ❤.</b>`
 
         await ctx.reply(txt1)
-        await delay(2000)
+        await delay(1000)
         await bot.telegram.sendMessage(chatid, txt2, { parse_mode: 'HTML' })
     } catch (err) {
         console.log(err)
