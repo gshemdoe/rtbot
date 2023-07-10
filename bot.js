@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const rtStarterModel = require('./database/chats')
 const malayaModel = require('./database/malaya')
 const videosDB = require('./database/db')
+const aliExDB = require('./database/aliexpress')
 
 //Middlewares
 const call_function = require('./functions/fn')
@@ -39,7 +40,9 @@ const imp = {
     mylove: -1001748858805,
     malayaDB: -1001783364680,
     rtgrp: -1001899312985,
-    matangazoDB: -1001570087172
+    matangazoDB: -1001570087172,
+    aliDB: -1001801595269,
+    aliProducts: -1001971329607
 }
 
 const miamala = ['nimelipia', 'tayari', 'tayali', 'umetuma kikamilifu', 'umetuma tsh', 'you have paid', 'utambulisho wa muamala', 'confirmed. tsh', 'imethibitishwa. umelipa']
@@ -77,6 +80,8 @@ bot.start(async ctx => {
                         ]
                     }
                 })
+            } else if(pload.toLowerCase() == 'iphone') {
+                await bot.telegram.copyMessage(ctx.chat.id, imp.matangazoDB, 33)
             }
         }
 
@@ -107,6 +112,37 @@ bot.command('paid', async ctx => {
         await ctx.reply(err.message)
             .catch(e => console.log(e.message))
     }
+})
+
+bot.command('convo', async ctx => {
+    let myId = ctx.chat.id
+    let txt = ctx.message.text
+    let msg_id = Number(txt.split('/convo-')[1].trim())
+    if (myId == imp.shemdoe || myId == imp.halot) {
+        try {
+            let all_users = await rtStarterModel.find({ refferer: "rtbot" })
+
+            all_users.forEach((u, index) => {
+                if (u.blocked != true) {
+                    setTimeout(() => {
+                        if (index == all_users.length - 1) {
+                            ctx.reply('Nimemaliza conversation')
+                        }
+                        bot.telegram.copyMessage(u.chatid, imp.matangazoDB, msg_id)
+                            .then(() => console.log('convo sent to ' + u.chatid))
+                            .catch((err) => {
+                                if (err.message.includes('blocked') || err.message.includes('initiate')) {
+                                    rtStarterModel.findOneAndDelete({ chatid: u.chatid })
+                                        .then(() => { console.log(u.chatid + ' is deleted') })
+                                }
+                            })
+                    }, index * 100)
+                }
+            })
+        } catch (err) {
+            console.log(err.message)
+        }
+    } else {await ctx.reply('You are not authorized')}
 })
 
 bot.command('info', async ctx => {
@@ -189,41 +225,10 @@ bot.command('list', async ctx => {
     }
 })
 
-bot.command('/convo', async ctx => {
-    let myId = ctx.chat.id
-    let txt = ctx.message.text
-    let msg_id = Number(txt.split('/convo-')[1].trim())
-    if (myId == imp.shemdoe || myId == imp.halot) {
-        try {
-            let all_users = await rtStarterModel.find({ refferer: "rtbot" })
-
-            all_users.forEach((u, index) => {
-                if (u.blocked != true) {
-                    setTimeout(() => {
-                        if (index == all_users.length - 1) {
-                            ctx.reply('Nimemaliza conversation')
-                        }
-                        bot.telegram.copyMessage(u.chatid, imp.pzone, msg_id)
-                            .then(() => console.log('convo sent to ' + u.chatid))
-                            .catch((err) => {
-                                if (err.message.includes('blocked') || err.message.includes('initiate')) {
-                                    rtStarterModel.findOneAndDelete({ chatid: u.chatid })
-                                        .then(() => { console.log(u.chatid + ' is deleted') })
-                                }
-                            })
-                    }, index * 40)
-                }
-            })
-        } catch (err) {
-            console.log(err.message)
-        }
-    }
-
-})
-
 bot.on('channel_post', async ctx => {
     try {
         let chan_id = ctx.channelPost.chat.id
+        let postId = ctx.channelPost.message_id
         if (chan_id == imp.malayaDB && ctx.channelPost.reply_to_message) {
             let msg = ctx.channelPost.text
             let msg_id = ctx.channelPost.message_id
@@ -243,6 +248,25 @@ bot.on('channel_post', async ctx => {
                             ],
                             [
                                 { text: 'Ignore', callback_data: `ignore_push` }
+                            ]
+                        ]
+                    }
+                })
+            }
+        }
+
+        if(chan_id == imp.aliDB && ctx.channelPost.video) {
+            let caps = ctx.channelPost.caption
+            if(caps.toLowerCase().includes('https://')) {
+                let affLink = caps.split('https://')[1]
+                affLink = `https://${affLink}`
+
+                await aliExDB.create({msgid: postId, affLink})
+                await bot.telegram.copyMessage(imp.aliProducts, chan_id, postId, {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [
+                                {text: '🎁 BUY NOW 50% OFF', url: affLink}
                             ]
                         ]
                     }
