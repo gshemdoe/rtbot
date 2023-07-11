@@ -32,6 +32,7 @@ const imp = {
     shemdoe: 741815228,
     halot: 1473393723,
     sh1xbet: 5755271222,
+    rtmalipo: 5849160770,
     xzone: -1001740624527,
     ohmyDB: -1001586042518,
     xbongo: -1001263624837,
@@ -80,7 +81,7 @@ bot.start(async ctx => {
                         ]
                     }
                 })
-            } else if(pload.toLowerCase() == 'iphone') {
+            } else if (pload.toLowerCase() == 'iphone') {
                 await bot.telegram.copyMessage(ctx.chat.id, imp.matangazoDB, 33)
             }
         }
@@ -91,22 +92,26 @@ bot.start(async ctx => {
 })
 
 bot.command('paid', async ctx => {
+    let authorized = [imp.shemdoe, imp.halot, imp.rtmalipo]
     try {
-        let splitter = ctx.message.text.split('=')
-        let chatid = Number(splitter[1])
-        let points = Number(splitter[2])
+        if (authorized.includes(ctx.chat.id)) {
+            let splitter = ctx.message.text.split('=')
+            let chatid = Number(splitter[1])
+            let points = Number(splitter[2])
 
-        let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, {
-            $inc: { points: points },
-            $set: { paid: true }
-        }, { new: true })
+            let upuser = await rtStarterModel.findOneAndUpdate({ chatid }, {
+                $inc: { points: points },
+                $set: { paid: true }
+            }, { new: true })
 
-        let txt1 = `User Points Added to ${upuser.points}`
-        let txt2 = `<b>Hongera 🎉\nMalipo yako yamethibitishwa. Umepokea Points ${points} na sasa una jumla ya Points ${upuser.points} kwenye account yako ya RT Malipo.\n\nTumia points zako vizuri. Kumbuka Kila video utakayo download itakugharimu Points 100.\n\nEnjoy, ❤.</b>`
+            let txt1 = `User Points Added to ${upuser.points}`
+            let txt2 = `<b>Hongera 🎉\nMalipo yako yamethibitishwa. Umepokea Points ${points} na sasa una jumla ya Points ${upuser.points} kwenye account yako ya RT Malipo.\n\nTumia points zako vizuri. Kumbuka Kila video utakayo download itakugharimu Points 100.\n\nEnjoy, ❤.</b>`
 
-        await ctx.reply(txt1)
-        await delay(1000)
-        await bot.telegram.sendMessage(chatid, txt2, { parse_mode: 'HTML' })
+            await ctx.reply(txt1)
+            await delay(1000)
+            await bot.telegram.sendMessage(chatid, txt2, { parse_mode: 'HTML' })
+        } else {await ctx.reply('You are not authorized to do this')}
+
     } catch (err) {
         console.log(err)
         await ctx.reply(err.message)
@@ -142,7 +147,7 @@ bot.command('convo', async ctx => {
         } catch (err) {
             console.log(err.message)
         }
-    } else {await ctx.reply('You are not authorized')}
+    } else { await ctx.reply('You are not authorized') }
 })
 
 bot.command('info', async ctx => {
@@ -175,25 +180,25 @@ bot.command('stats', async ctx => {
     }
 })
 
-bot.command('salio', async ctx=> {
+bot.command('salio', async ctx => {
     try {
         let chatid = ctx.chat.id
-        let inf = await rtStarterModel.findOne({chatid})
-        if(inf) {
+        let inf = await rtStarterModel.findOne({ chatid })
+        if (inf) {
             let txt = `Habari ${ctx.chat.first_name}, \n\nUna points *${inf.points}* kwenye account yako ya RT Malipo`
             await ctx.reply(txt, {
                 parse_mode: 'Markdown',
                 reply_markup: {
-                    inline_keyboard: [[{text: '➕ Ongeza Points', callback_data: 'ongeza_points'}]]
+                    inline_keyboard: [[{ text: '➕ Ongeza Points', callback_data: 'ongeza_points' }]]
                 }
             })
-        } else {await ctx.reply('Samahani! Taarifa zako hazipo kwenye kanzu data yetu.')}
+        } else { await ctx.reply('Samahani! Taarifa zako hazipo kwenye kanzu data yetu.') }
     } catch (err) {
         await ctx.reply(err.message)
     }
 })
 
-bot.command('ongeza_pts', async ctx=> {
+bot.command('ongeza_pts', async ctx => {
     try {
         await call_function.payingInfo(bot, ctx, delay, imp, ctx.chat.id, 26)
     } catch (err) {
@@ -201,7 +206,7 @@ bot.command('ongeza_pts', async ctx=> {
     }
 })
 
-bot.command('msaada', async ctx=> {
+bot.command('msaada', async ctx => {
     try {
         await bot.telegram.copyMessage(ctx.chat.id, imp.matangazoDB, 25)
     } catch (err) {
@@ -255,18 +260,18 @@ bot.on('channel_post', async ctx => {
             }
         }
 
-        if(chan_id == imp.aliDB && ctx.channelPost.video) {
+        if (chan_id == imp.aliDB && ctx.channelPost.video) {
             let caps = ctx.channelPost.caption
-            if(caps.toLowerCase().includes('https://')) {
+            if (caps.toLowerCase().includes('https://')) {
                 let affLink = caps.split('https://')[1]
                 affLink = `https://${affLink}`
 
-                await aliExDB.create({msgid: postId, affLink})
+                await aliExDB.create({ msgid: postId, affLink })
                 await bot.telegram.copyMessage(imp.aliProducts, chan_id, postId, {
                     reply_markup: {
                         inline_keyboard: [
                             [
-                                {text: '🎁 BUY NOW 50% OFF', url: affLink}
+                                { text: '🎁 BUY NOW 50% OFF', url: affLink }
                             ]
                         ]
                     }
@@ -513,4 +518,4 @@ const server = http.createServer((req, res) => {
     res.end("Hello World");
 });
 
-server.listen(process.env.PORT || 3000, ()=> console.log('Listen to port 3000'))
+server.listen(process.env.PORT || 3000, () => console.log('Listen to port 3000'))
